@@ -8,5 +8,5 @@
 # @Software: PyCharm
 
 print('你好，学习Python!')
-print('Hello')
+print('Hello, Python')
 
