@@ -10,3 +10,4 @@
 print('你好，学习Python!')
 print('Hello, Python')
 
+print('在win7上更新库')
