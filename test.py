@@ -11,3 +11,5 @@ print('你好，学习Python!')
 print('Hello, Python')
 
 print('在win7上更新库')
+
+print('在HP win10上更新库')
