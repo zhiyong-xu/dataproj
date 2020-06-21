@@ -6,12 +6,15 @@ from pandas import read_excel
 '''
 参数定义
 '''
-#季度
+# 季度
 quarter = 1
 
 # 输入输出文件
 in_file_path = 'files/data.xlsx'
 out_file_path = 'files/output.xlsx'
+
+# 写入文件北10省和南21省的起始行
+start_row_dic = {'north10': 1, 'south21': 16}
 
 # 表头字段列表
 table1_names = ['省分', '不动产出租收入预算-集团（万元）', '不动产出租收入预算-上市（万元）', '出租收入本年累计-集团（万元）', '出租收入本年累计-上市（万元）', '出租收入进度-集团', '出租收入进度-上市']
@@ -22,7 +25,7 @@ table5_names = ['省分', '主营业务收入（百万元）', '建筑面积（�
 table6_names = ['省分', '固定资产金额（百万元）', '建筑自用面积（万平米）', '固定资产占用建筑面积（平米/百万元）', '土地自用面积（万平米）', '固定资产占用土地面积（平米/百万元）']
 table7_names = ['省分', '利润总额（百万元）', '建筑面积（万平米）', '利润占用建筑面积（平米/百万元利润）', '土地面积（万平米）', '利润占用土地面积（平米/百万元利润）']
 
-# 读取excel各sheet的源数据
+# 读取excel各sheet
 df_fix_assets = read_excel(in_file_path, sheet_name='固定资产', skiprows=2)
 df_employees = read_excel(in_file_path, sheet_name='人员数量', skiprows=2)
 df_budget = read_excel(in_file_path, sheet_name='预算', skiprows=2)
@@ -30,8 +33,6 @@ df_building = read_excel(in_file_path, sheet_name='建筑面积', skiprows=1)
 df_land = read_excel(in_file_path, sheet_name='土地面积', skiprows=1)
 df_business = read_excel(in_file_path, sheet_name='主营业务', skiprows=1)
 df_rent = read_excel(in_file_path, sheet_name='出租收入', skiprows=2)
-# df_rent = read_excel(file_path, sheet_name='出租收入', header=None, names=[['省分', '集团', '集团', '集团', '上市', '上市', '上市'], ['省分', '核算口径', '关联交易', '对外出租', '核算口径', '关联交易', '对外出租']], skiprows=1)
-# df =pd.DataFrame()
 
 '''
 进行表格关联，生成初始表
@@ -70,7 +71,7 @@ df_profit_square = reduce(lambda left, right: pd.merge(left, right, on='省分')
 
 
 # 北10省和南21省预算进度分析
-def budget_progress(df_progress=None, region='north10', col_names=table1_names):
+def budget_progress(df_progress=None, index_name=None, region='north10', col_names=table1_names):
     # 全国31省汇总
     df_progress.loc[31] = ['全国31省', 0, 0, 0, 0]
     df_progress.loc[31, 1:5] = df_progress[[df_progress.columns[1], df_progress.columns[2], df_progress.columns[3], df_progress.columns[4]]].apply(lambda x: x.sum())
@@ -107,7 +108,7 @@ def budget_progress(df_progress=None, region='north10', col_names=table1_names):
     return df_progress_region
 
 # 表2：出租收入、出租单价、出租面积分析
-def rent_area(df_rent_area=None, qtr=None, region='north10', col_names=table2_names):
+def rent_area(df_rent_area=None, index_name=None, region='north10', col_names=table2_names):
     # 全国31省汇总
     df_rent_area.loc[31] = ['全国31省', 0, 0, 0]
     df_rent_area.loc[31, 1:5] = df_rent_area[df_rent_area.columns[1:]].apply(lambda x: x.sum())
@@ -135,7 +136,7 @@ def rent_area(df_rent_area=None, qtr=None, region='north10', col_names=table2_na
     # 补充下方31省汇总数据
     df_rent_area_region.loc[region_count + 1] = df_rent_area.loc[31]
     # 计算单价和出租率
-    df_rent_area_region[col_names[3]] = df_rent_area_region[df_rent_area_region.columns[1]] * 10000 / (df_rent_area_region[df_rent_area_region.columns[3]] * qtr * 3)
+    df_rent_area_region[col_names[3]] = df_rent_area_region[df_rent_area_region.columns[1]] * 10000 / (df_rent_area_region[df_rent_area_region.columns[3]] * quarter * 3)
     df_rent_area_region[col_names[4]] = df_rent_area_region[df_rent_area_region.columns[3]] / df_rent_area_region[df_rent_area_region.columns[2]]
     #表格显示单位换算，显示为万平米
     df_rent_area_region[df_rent_area_region.columns[3]] = df_rent_area_region[df_rent_area_region.columns[3]] / 10000
@@ -154,7 +155,7 @@ def rent_area(df_rent_area=None, qtr=None, region='north10', col_names=table2_na
     return df_rent_area_region
 
 # 表3：出租收入与主营业务收入比例分析
-def rent_revenue_ratio(df=None, region='north10', col_names=table3_names):
+def rent_revenue_ratio(df=None, index_name=None, region='north10', col_names=table3_names):
     # 全国31省汇总
     df_ratio = df.copy()  #后续会修改列数，先复制一份，否则下一句会出错
     df_ratio.loc[31] = ['全国31省', 0, 0]
@@ -276,54 +277,30 @@ def index_area(df=None, index_name=None, region='north10', col_names=table7_name
 
     return df_index_area_all
 
-def write_excel(df=None, file=None, sheet_name=None, start_row=None):
+
+# 函数作为参数，构建回调函数，返回dataframe
+def get_df(func, df, index, region, columns):
+    return func(df, index, region, columns)
+
+
+if __name__ == '__main__':
+    print('*******************************************************')
+    print('程序开始运行：')
+    # 将函数、dataframe、指标、表头、sheet等做成list，
+    func_list = [budget_progress, rent_area, rent_revenue_ratio, index_area, index_area, index_area, index_area]
+    df_list = [df_budget_progress, df_rent_area, df_rent_ratio, df_employees_area, df_revenue_square, df_assets_square,
+               df_profit_square]
+    index_list = [None, None, None, 'employees', 'revenue', 'assets', 'profit']
+    table_name_list = [table1_names, table2_names, table3_names, table4_names, table5_names, table6_names, table7_names]
+    sheet_name_list = ['出租收入预算进度', '出租单价和面积情况', '出租收入与主营业务收入比例情况', '人均自用面积情况', '收入占用面积情况', '固定资产占用面积情况', '利润占用面积情况']
+    # 写入excel的不同sheet
     with pd.ExcelWriter(out_file_path) as writer:
-        df.to_excel(writer, sheet_name=sheet_name, startrow=start_row)
+        for i in range(len(func_list)):
+            for region in ['north10', 'south21']:  # 北10省和南21省分别写入
+                df = get_df(func_list[i], df_list[i], index_list[i], region, table_name_list[i])
+                df.to_excel(writer, sheet_name=sheet_name_list[i], startrow=start_row_dic[region])
+    writer.save()
+    writer.close()
+    print('数据已写入excel文件，位置在', out_file_path)
+    print('*******************************************************')
 
-df_budget_progress_N10 = budget_progress(df_budget_progress, region='north10', col_names=table1_names)
-df_budget_progress_S21 = budget_progress(df_budget_progress, region='south21', col_names=table1_names)
-
-df_rent_area_N10 = rent_area(df_rent_area, qtr=quarter, region='north10', col_names=table2_names)
-df_rent_area_S21 = rent_area(df_rent_area, qtr=quarter, region='south21', col_names=table2_names)
-
-df_rent_ratio_N10 = rent_revenue_ratio(df_rent_ratio, region='north10', col_names=table3_names)
-df_rent_ratio_S21 = rent_revenue_ratio(df_rent_ratio, region='south21', col_names=table3_names)
-
-df_employees_area_N10 = index_area(df_employees_area, index_name='employees', region='north10', col_names=table4_names)
-df_employees_area_S21 = index_area(df_employees_area, index_name='employees', region='south21', col_names=table4_names)
-
-df_revenue_area_N10 = index_area(df_revenue_square, index_name='revenue', region='north10', col_names=table5_names)
-df_revenue_area_S21 = index_area(df_revenue_square, index_name='revenue', region='south21', col_names=table5_names)
-
-df_assets_area_N10 = index_area(df_assets_square, index_name='assets', region='north10', col_names=table6_names)
-df_assets_area_S21 = index_area(df_assets_square, index_name='assets', region='south21', col_names=table6_names)
-
-df_profit_area_N10 = index_area(df_profit_square, index_name='profit', region='north10', col_names=table7_names)
-df_profit_area_S21 = index_area(df_profit_square, index_name='profit', region='south21', col_names=table7_names)
-
-
-# 写入Excel的不同sheet
-with pd.ExcelWriter(out_file_path) as writer:
-    df_budget_progress_N10.to_excel(writer, sheet_name='出租收入预算进度', startrow=1)
-    df_budget_progress_S21.to_excel(writer, sheet_name='出租收入预算进度', startrow=16)
-
-    df_rent_area_N10.to_excel(writer, sheet_name='出租单价和面积情况', startrow=1)
-    df_rent_area_S21.to_excel(writer, sheet_name='出租单价和面积情况', startrow=16)
-
-    df_rent_ratio_N10.to_excel(writer, sheet_name='出租收入与主营业务收入比例情况', startrow=1)
-    df_rent_ratio_S21.to_excel(writer, sheet_name='出租收入与主营业务收入比例情况', startrow=16)
-
-    df_employees_area_N10.to_excel(writer, sheet_name='人均自用面积情况', startrow=1)
-    df_employees_area_S21.to_excel(writer, sheet_name='人均自用面积情况', startrow=16)
-
-    df_revenue_area_N10.to_excel(writer, sheet_name='收入占用面积情况', startrow=1)
-    df_revenue_area_S21.to_excel(writer, sheet_name='收入占用面积情况', startrow=16)
-
-    df_assets_area_N10.to_excel(writer, sheet_name='固定资产占用面积情况', startrow=1)
-    df_assets_area_S21.to_excel(writer, sheet_name='固定资产占用面积情况', startrow=16)
-
-    df_profit_area_N10.to_excel(writer, sheet_name='利润占用面积情况', startrow=1)
-    df_profit_area_S21.to_excel(writer, sheet_name='利润占用面积情况', startrow=16)
-
-writer.save()
-writer.close()
