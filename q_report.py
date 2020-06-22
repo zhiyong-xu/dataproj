@@ -140,8 +140,7 @@ def rent_area(df_rent_area=None, index_name=None, region='north10', col_names=ta
     df_rent_area_region[col_names[4]] = df_rent_area_region[df_rent_area_region.columns[3]] / df_rent_area_region[df_rent_area_region.columns[2]]
     #表格显示单位换算，显示为万平米
     df_rent_area_region[df_rent_area_region.columns[3]] = df_rent_area_region[df_rent_area_region.columns[3]] / 10000
-    #df_rent_area_region = df_rent_area_region[['省分', '集团-对外出租收入', '建筑出租面积（万平米）', '出租单价（元/平米/月）', '建筑面积出租率']]
-    #print(df_rent_area_region.columns)
+
     df_rent_area_region.drop(df_rent_area_region.columns[2], axis=1, inplace=True)
     df_rent_area_region.columns = col_names
     #print(df_rent_area_region.columns)
@@ -162,7 +161,7 @@ def rent_revenue_ratio(df=None, index_name=None, region='north10', col_names=tab
     df_ratio.loc[31, 1:3] = df_ratio[
         [df_ratio.columns[1], df_ratio.columns[2]]].apply(lambda x: x.sum())
 
-    #增加出租收入占主营业务收入比例列
+    # 增加出租收入占主营业务收入比例列
     df_ratio[col_names[3]] = (df_ratio[df_ratio.columns[1]]) / (df_ratio[df_ratio.columns[2]])
 
     # 分区域分析
@@ -184,15 +183,14 @@ def rent_revenue_ratio(df=None, index_name=None, region='north10', col_names=tab
     # 排序
     df_ratio_region.sort_values(by=col_names[3], ascending=False, inplace=True)
     df_ratio_region.reset_index(drop=True, inplace=True)
-    #北10和南21区域下方追加本区域数据汇总计算行，先不计算主营收入占比的列
+    # 北10和南21区域下方追加本区域数据汇总计算行，先不计算主营收入占比的列
     df_ratio_region.loc[region_count] = [region_name, 0, 0, 0]
     df_ratio_region.loc[region_count, 1:3] = df_ratio_region[[df_ratio_region.columns[1], df_ratio_region.columns[2]]].apply(lambda x: x.sum())
     # 追加31省汇总数据行
     df_ratio_region.loc[region_count + 1] = df_ratio.loc[31]
     # 计算主营业务收入占比的列
     df_ratio_region[col_names[3]] = (df_ratio_region[df_ratio_region.columns[1]]) / df_ratio_region[df_ratio_region.columns[2]]
-
-    #最终表格列重命名
+    # 最终表格列重命名
     df_ratio_region.columns = col_names
 
     # 格式化表格的各列
@@ -204,12 +202,12 @@ def rent_revenue_ratio(df=None, index_name=None, region='north10', col_names=tab
     return df_ratio_region
 
 
-# 表4-7：人员、收入、固定资产、利润占用面积分析通用函数
+# 表4-表7：人员、收入、固定资产、利润占用面积分析通用函数
 def index_area(df=None, index_name=None, region='north10', col_names=table7_names):
     # 全国31省汇总
     df_index_area = df.copy()  #后续会修改列数，先复制一份，否则下一句会出错
     df_index_area.loc[31] = ['全国31省', 0, 0, 0]
-    #df_index_area.loc[31, 1:4] = df_index_area[['利润总额', '建筑总面积', '土地总面积']].apply(lambda x: x.sum())
+    # df_index_area.loc[31, 1:4] = df_index_area[['利润总额', '建筑总面积', '土地总面积']].apply(lambda x: x.sum())
     df_index_area.loc[31, 1:4] = df_index_area[
         [df_index_area.columns[1], df_index_area.columns[2], df_index_area.columns[3]]].apply(
         lambda x: x.sum())
@@ -221,11 +219,9 @@ def index_area(df=None, index_name=None, region='north10', col_names=table7_name
     else:
         unit = 100
 
-    #增加单位指标占用的建筑面积和土地面积两列
+    # 增加单位指标占用的建筑面积和土地面积两列
     df_index_area[col_names[3]] = (df_index_area[df_index_area.columns[2]]) / (df_index_area[df_index_area.columns[1]] / unit)
     df_index_area[col_names[5]] = (df_index_area[df_index_area.columns[3]]) / (df_index_area[df_index_area.columns[1]] / unit)
-    #print('31省汇总数据-初始时')
-    #print(df_index_area.loc[31])
 
     # 分区域分析
     region_start = 0
@@ -241,9 +237,9 @@ def index_area(df=None, index_name=None, region='north10', col_names=table7_name
         region_count = 21
         region_name = '南21省'
 
-    #北10省和南21省分别计算
+    # 北10省和南21省分别计算
     df_index_area_region = df_index_area.copy().loc[region_start:region_end, :]  # 不copy会报错
-    #指标为正、为负的分组排序
+    # 指标为正、为负的分组排序
     df_index_area_pos = df_index_area_region[df_index_area_region[df_index_area_region.columns[1]] > 0].copy()
     df_index_area_neg = df_index_area_region[df_index_area_region[df_index_area_region.columns[1]] < 0].copy()
 
@@ -251,7 +247,7 @@ def index_area(df=None, index_name=None, region='north10', col_names=table7_name
     df_index_area_neg.sort_values(by=col_names[3], ascending=True, inplace=True)
     df_index_area_all = pd.concat([df_index_area_pos, df_index_area_neg], ignore_index=True)
     df_index_area_all.reset_index(drop=True, inplace=True)
-    #北10和南21区域下方追加本区域数据汇总计算行，先不计算单位指标的列
+    # 北10和南21区域下方追加本区域数据汇总计算行，先不计算单位指标的列
     df_index_area_all.loc[region_count] = [region_name, 0, 0, 0, 0, 0]
     df_index_area_all.loc[region_count, 1:4] = df_index_area_all[[df_index_area_all.columns[1], df_index_area_all.columns[2], df_index_area_all.columns[3]]].apply(
         lambda x: x.sum())
@@ -261,7 +257,7 @@ def index_area(df=None, index_name=None, region='north10', col_names=table7_name
     df_index_area_all[col_names[3]] = (df_index_area_all[df_index_area_all.columns[2]]) / (df_index_area_all[df_index_area_all.columns[1]] / unit)
     df_index_area_all[col_names[5]] = (df_index_area_all[df_index_area_all.columns[3]]) / (df_index_area_all[df_index_area_all.columns[1]] / unit)
 
-    #最终表格显示单位
+    # 最终表格显示单位
     index_view_unit = 100
     area_view_unit = 10000
     if index_name in ['employees']:
@@ -276,7 +272,6 @@ def index_area(df=None, index_name=None, region='north10', col_names=table7_name
         df_index_area_all[i] = df_index_area_all[i].apply(lambda x: format(round(x, 1), ','))
 
     return df_index_area_all
-
 
 # 函数作为参数，构建回调函数，返回dataframe
 def get_df(func, df, index, region, columns):
