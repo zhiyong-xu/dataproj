@@ -9,9 +9,9 @@ from pandas import read_excel
 # 季度
 quarter = 1
 
-# 输入输出文件
-in_file_path = 'files/data.xlsx'
-out_file_path = 'files/output.xlsx'
+# 输入输出文件名称设置
+in_file_path = 'files/data_20q2.xlsx'
+out_file_path = 'files/output_20q2.xlsx'
 
 # 写入文件北10省和南21省的起始行
 start_row_dic = {'north10': 1, 'south21': 16}
