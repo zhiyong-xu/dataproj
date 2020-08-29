@@ -7,11 +7,11 @@ from pandas import read_excel
 参数定义
 '''
 # 季度参数，每季度更新
-quarter = 2
+quarter = 1
 
 # 输入输出文件名称设置，每季度更新
-in_file_path = 'files/data_20q2.xlsx'
-out_file_path = 'files/output_20q2.xlsx'
+in_file_path = 'files/data_20q1.xlsx'
+out_file_path = 'files/output_20q1.xlsx'
 
 # 写入文件北10省和南21省的起始行
 start_row_dic = {'north10': 1, 'south21': 16}
