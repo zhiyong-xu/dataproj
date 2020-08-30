@@ -26,6 +26,7 @@ table6_names = ['省分', '固定资产金额（百万元）', '建筑自用面�
 table7_names = ['省分', '利润总额（百万元）', '建筑面积（万平米）', '利润占用建筑面积（平米/百万元利润）', '土地面积（万平米）', '利润占用土地面积（平米/百万元利润）']
 
 # 读取excel各sheet
+#注意，不同版本的pandas的sheetname的参数名不同，新的是sheet_name，旧的是sheetname
 df_fix_assets = read_excel(in_file_path, sheet_name='固定资产', skiprows=2)
 df_employees = read_excel(in_file_path, sheet_name='人员数量', skiprows=2)
 df_budget = read_excel(in_file_path, sheet_name='预算', skiprows=2)
